@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Carbonería · Seguimiento de Líderes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+:root {
+  --navy:#0D2240; --navy-mid:#163257; --navy-soft:#E8EDF4;
+  --crimson:#C0151F; --crimson-lt:#F8E6E7;
+  --amber:#D97706; --amber-lt:#FEF3C7;
+  --teal:#0F766E; --teal-lt:#CCFBF1;
+  --slate:#64748B; --slate-lt:#F1F5F9;
+  --white:#FFFFFF; --border:#E2E8F0;
+  --text:#0F172A; --text-muted:#64748B;
+  --radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Inter',system-ui,sans-serif;background:#F8FAFC;color:var(--text);min-height:100vh}
+
+/* SETUP BANNER */
+#setup-banner{background:var(--amber-lt);border-bottom:2px solid var(--amber);padding:12px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+#setup-banner.hidden{display:none}
+.setup-text{font-size:13px;color:#92400E;line-height:1.5}
+.setup-text strong{font-weight:700}
+.setup-steps{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.step-badge{background:var(--amber);color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.setup-input-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.setup-input{padding:6px 10px;border:1px solid #F6C24C;border-radius:5px;font-size:12px;font-family:inherit;background:#fff;width:320px}
+.btn-setup{background:var(--amber);color:#fff;border:none;padding:7px 14px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn-setup:hover{background:#B45309}
+.dismiss-setup{color:var(--amber);background:none;border:none;font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit}
+
+/* HEADER */
+.header{background:var(--navy);height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;border-bottom:3px solid var(--crimson)}
+.header-left{display:flex;align-items:center;gap:14px}
+.nc-badge{background:var(--crimson);color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;padding:4px 8px;border-radius:4px;text-transform:uppercase}
+.header-title{color:#fff;font-size:15px;font-weight:600;letter-spacing:-.2px}
+.header-sub{color:rgba(255,255,255,.45);font-size:12px;margin-top:1px}
+.header-actions{display:flex;gap:8px;align-items:center}
+.sync-status{font-size:11px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:5px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#22C55E}
+.sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
+.sync-dot.offline{background:#EF4444}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;font-size:12.5px;font-weight:500;cursor:pointer;border:none;font-family:inherit;transition:background .12s;white-space:nowrap}
+.btn-primary{background:var(--crimson);color:#fff}.btn-primary:hover{background:#a01018}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:var(--navy-mid)}
+.btn-outline{background:#fff;color:var(--navy);border:1px solid var(--border)}.btn-outline:hover{border-color:var(--navy)}
+.btn-ghost{background:transparent;color:rgba(255,255,255,.65)}.btn-ghost:hover{color:#fff}
+.btn-sm{padding:5px 10px;font-size:11.5px}
+
+/* NAV */
+.nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;display:flex;position:sticky;top:60px;z-index:99}
+.nav-tab{padding:13px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .12s,border-color .12s}
+.nav-tab:hover{color:var(--navy)}.nav-tab.active{color:var(--navy);border-bottom-color:var(--crimson);font-weight:600}
+
+/* MAIN */
+.main{padding:24px 28px;max-width:1340px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px}
+.stat.s-total::after{background:var(--slate)}.stat.s-nuevo::after{background:var(--crimson)}
+.stat.s-seg::after{background:var(--navy)}.stat.s-pend::after{background:var(--amber)}.stat.s-done::after{background:var(--teal)}
+.stat-n{font-size:32px;font-weight:700;line-height:1;letter-spacing:-1px;margin-bottom:4px}
+.s-nuevo .stat-n{color:var(--crimson)}.s-seg .stat-n{color:var(--navy)}.s-pend .stat-n{color:var(--amber)}.s-done .stat-n{color:var(--teal)}
+.stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+
+/* SECTION HEADING */
+.sh{font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+
+/* RESP GRID */
+.resp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:28px}
+.resp-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:border-color .12s,box-shadow .12s}
+.resp-card:hover{border-color:var(--navy);box-shadow:0 2px 8px rgba(13,34,64,.08)}
+.resp-name{font-weight:600;font-size:13px;margin-bottom:10px;color:var(--navy)}
+.mini-bar{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-bottom:6px}
+.mb-seg{background:var(--navy)}.mb-new{background:var(--crimson)}.mb-pend{background:var(--amber)}.mb-done{background:var(--teal)}
+.resp-counts{display:flex;gap:8px;flex-wrap:wrap}
+.rc{font-size:10px;color:var(--text-muted);display:flex;align-items:center;gap:3px}
+.rc-dot{width:6px;height:6px;border-radius:50%}
+
+/* RECURRENCE PANEL */
+.recurrence-panel{background:var(--white);border:1px solid var(--border);border-left:3px solid var(--crimson);border-radius:var(--radius);overflow:hidden;margin-bottom:28px}
+
+/* FILTERS */
+.filters{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.filter-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px}
+.fsel,.fsearch{background:#F8FAFC;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 11px;font-size:12.5px;font-family:inherit;cursor:pointer}
+.fsel:focus,.fsearch:focus{outline:none;border-color:var(--navy)}
+.fsearch{min-width:200px}.fsearch::placeholder{color:var(--text-muted)}
+
+/* TABLE */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--navy);color:rgba(255,255,255,.75);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;padding:10px 14px;text-align:left;font-weight:600;white-space:nowrap}
+tbody tr{transition:background .1s}
+tbody tr:hover{background:#F8FAFC}
+tbody tr:not(:last-child) td{border-bottom:1px solid var(--border)}
+tbody td{padding:11px 14px;font-size:12.5px;vertical-align:top}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid transparent;font-family:inherit;transition:opacity .1s;white-space:nowrap}
+.badge:hover{opacity:.75}
+.badge.nuevo{background:var(--crimson-lt);color:var(--crimson);border-color:#f0b0b3}
+.badge.seguimiento{background:var(--navy-soft);color:var(--navy);border-color:#bfcfe6}
+.badge.pendiente{background:var(--amber-lt);color:#92400E;border-color:#fcd34d}
+.badge.concluido{background:var(--teal-lt);color:var(--teal);border-color:#5eead4}
+
+/* CHIPS */
+.chip{display:inline-block;background:var(--slate-lt);color:var(--navy);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;transition:background .1s}
+.chip:hover{background:var(--navy-soft)}
+.rubro-pill{display:inline-block;background:var(--navy-soft);color:var(--navy);padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500}
+.recur-flag{display:inline-block;background:var(--crimson-lt);color:var(--crimson);border:1px solid #f0b0b3;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:700;margin-left:6px}
+
+/* COMMENT */
+.comment-row{display:none}
+.comment-row.open{display:flex;gap:7px;margin-top:7px}
+.comment-input{flex:1;background:#F8FAFC;border:1px solid var(--border);border-radius:5px;padding:5px 9px;font-size:12px;font-family:inherit;resize:none;height:32px;color:var(--text)}
+.comment-input:focus{outline:none;border-color:var(--navy)}
+.last-comment{font-size:11px;color:var(--text-muted);font-style:italic;margin-top:4px}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(13,34,64,.45);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:12px;padding:28px;width:520px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(13,34,64,.2)}
+.modal-h{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--crimson)}
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.fi,.fs,.fta{width:100%;background:#F8FAFC;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 11px;font-size:13px;font-family:inherit}
+.fta{resize:vertical;min-height:80px}
+.fi:focus,.fs:focus,.fta:focus{outline:none;border-color:var(--navy)}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* MINUTA */
+.minuta-header-card{background:var(--white);border:1px solid var(--border);border-top:3px solid var(--crimson);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;align-items:end}
+.mf label{display:block;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.mf input{background:#F8FAFC;border:1px solid var(--border);border-radius:5px;padding:7px 10px;font-size:13px;font-family:inherit;width:100%}
+.mf input:focus{outline:none;border-color:var(--navy)}
+.minuta-preview{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:32px;margin-top:24px;display:none}
+.min-doc-title{text-align:center;font-size:20px;font-weight:700;color:var(--navy);letter-spacing:1px;margin-bottom:4px}
+.min-doc-sub{text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid var(--crimson)}
+.min-meta-table{width:100%;border-collapse:collapse;margin-bottom:20px}
+.min-meta-table th{background:var(--navy);color:rgba(255,255,255,.7);font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;padding:8px 12px;text-align:left}
+.min-meta-table td{padding:9px 12px;border:1px solid var(--border);font-size:13px}
+.min-section-head{background:var(--navy);color:white;padding:8px 12px;font-size:11.5px;font-weight:700;letter-spacing:.3px}
+.min-section-head.crimson{background:var(--crimson)}.min-section-head.amber{background:var(--amber)}
+.min-row td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px}
+.sign-row{display:flex;gap:20px;justify-content:space-around;margin-top:32px}
+.sign-box{text-align:center}
+.sign-line{border-top:1px solid #aaa;width:150px;padding-top:6px;font-size:11px;color:var(--text-muted)}
+
+/* HISTORIAL */
+.session-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;transition:border-color .12s}
+.session-card:hover{border-color:var(--navy)}
+.sess-date{font-weight:600;font-size:14px;color:var(--navy)}
+.sess-meta{font-size:12px;color:var(--text-muted);margin-top:2px}
+
+/* MISC */
+.empty{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:13px}
+.toast{position:fixed;bottom:20px;right:24px;background:var(--navy);color:#fff;padding:11px 18px;border-radius:8px;font-size:12.5px;font-weight:500;z-index:600;opacity:0;transform:translateY(10px);transition:all .18s;pointer-events:none;border-left:3px solid var(--crimson)}
+.toast.show{opacity:1;transform:translateY(0)}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:#F1F5F9}::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ══ SETUP BANNER ══ -->
+<div id="setup-banner">
+  <div class="setup-text">
+    <strong>⚙️ Configuración inicial (solo una vez)</strong> — Para que tú y el gerente vean los mismos datos, conecta el Google Sheet.
+    <div class="setup-steps">
+      <span class="step-badge">1</span> Abre el Sheet →
+      <a href="https://docs.google.com/spreadsheets/d/1dM6soG-vQaLvkCQoZch2kaS4V7S7gQueZ5SEeC5yoZU/edit" target="_blank" style="color:#92400E;font-weight:600;">La Carbonería · Seguimiento de Líderes</a>
+      &nbsp;
+      <span class="step-badge">2</span> Extensiones → Apps Script → pega el código de abajo → Guardar → Ejecutar (permitir permisos)
+      &nbsp;
+      <span class="step-badge">3</span> Copia la URL del Web App que genera y pégala aquí:
+    </div>
+    <div class="setup-input-row" style="margin-top:8px;">
+      <input type="text" class="setup-input" id="webapp-url" placeholder="https://script.google.com/macros/s/XXXXX/exec">
+      <button class="btn-setup" onclick="saveWebAppUrl()">Conectar</button>
+      <button class="dismiss-setup" onclick="skipSetup()">Ya lo configuré antes</button>
+    </div>
+  </div>
+  <button onclick="document.getElementById('setup-banner').classList.add('hidden')" style="color:#92400E;background:none;border:none;font-size:18px;cursor:pointer;flex-shrink:0;">✕</button>
+</div>
+
+<!-- ══ HEADER ══ -->
+<div class="header">
+  <div class="header-left">
+    <span class="nc-badge">NC</span>
+    <div>
+      <div class="header-title">La Carbonería · Seguimiento de Líderes</div>
+      <div class="header-sub">NC Negocios</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">Local</span></div>
+    <button class="btn btn-ghost btn-sm" onclick="openM('m-session')">+ Sesión</button>
+    <button class="btn btn-primary btn-sm" onclick="openM('m-task')">+ Agregar actividad</button>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <div class="nav-tab active" onclick="showPage('dashboard',this)">Dashboard</div>
+  <div class="nav-tab" onclick="showPage('tasks',this)">Actividades</div>
+  <div class="nav-tab" onclick="showPage('minuta',this)">Generar minuta</div>
+  <div class="nav-tab" onclick="showPage('historial',this)">Historial</div>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div id="p-dashboard" class="page active">
+  <div class="stats-row" id="stats-row"></div>
+  <div class="sh">Carga por responsable</div>
+  <div class="resp-grid" id="resp-grid"></div>
+  <div class="sh">Actividades recurrentes</div>
+  <div class="recurrence-panel">
+    <table><thead><tr><th>Actividad</th><th>Responsable</th><th>Rubro</th><th>Apariciones</th><th>Estatus</th></tr></thead>
+    <tbody id="recur-tbody"></tbody></table>
+  </div>
+</div>
+
+<!-- ACTIVIDADES -->
+<div id="p-tasks" class="page">
+  <div class="filters">
+    <span class="filter-label">Filtrar:</span>
+    <input type="text" class="fsearch" id="fsearch" placeholder="Buscar actividad o responsable…" oninput="renderTasks()">
+    <select class="fsel" id="f-resp" onchange="renderTasks()"><option value="">Todos los responsables</option></select>
+    <select class="fsel" id="f-status" onchange="renderTasks()">
+      <option value="">Todos los estatus</option>
+      <option value="nuevo">🔴 Nuevo</option>
+      <option value="seguimiento">🟡 En seguimiento</option>
+      <option value="pendiente">🟠 Pendiente</option>
+      <option value="concluido">🟢 Concluido</option>
+    </select>
+    <select class="fsel" id="f-rubro" onchange="renderTasks()"><option value="">Todos los rubros</option></select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th style="width:32px;">#</th><th>Actividad</th>
+        <th style="width:110px;">Rubro</th><th style="width:140px;">Responsable</th>
+        <th style="width:130px;">Estatus</th><th style="width:90px;">Avances</th>
+        <th style="width:80px;">Sesión</th>
+      </tr></thead>
+      <tbody id="tasks-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MINUTA -->
+<div id="p-minuta" class="page">
+  <div class="minuta-header-card">
+    <div class="mf"><label>Fecha</label><input type="text" id="min-fecha" placeholder="9 de junio 2026"></div>
+    <div class="mf"><label>Horario</label><input type="text" id="min-hora" placeholder="12:00pm"></div>
+    <div class="mf"><label>Asistentes</label><input type="text" id="min-asist" placeholder="Gus, Omar, Saúl, Nancy"></div>
+    <button class="btn btn-primary" onclick="genMinuta()">Generar minuta</button>
+  </div>
+  <div class="sh">Selecciona las actividades a incluir</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th><input type="checkbox" id="chk-all" onchange="toggleAll(this)"></th>
+        <th>Actividad</th><th>Responsable</th><th>Rubro</th><th>Estatus</th>
+      </tr></thead>
+      <tbody id="min-tbody"></tbody>
+    </table>
+  </div>
+  <div class="minuta-preview" id="minuta-preview">
+    <div class="min-doc-title">MINUTA DE JUNTA</div>
+    <div class="min-doc-sub">La Carbonería · Equipo de Líderes</div>
+    <table class="min-meta-table">
+      <thead><tr><th>Fecha</th><th>Horario</th><th>Apuntador</th><th>Asistentes</th></tr></thead>
+      <tbody><tr>
+        <td id="m-fecha-out"></td><td id="m-hora-out"></td>
+        <td>Nancy</td><td id="m-asist-out"></td>
+      </tr></tbody>
+    </table>
+    <table id="minuta-table" style="width:100%;border-collapse:collapse;"></table>
+    <div class="sign-row">
+      <div class="sign-box"><div class="sign-line">Omar Pizaña</div></div>
+      <div class="sign-box"><div class="sign-line">Saúl Fernández</div></div>
+      <div class="sign-box"><div class="sign-line">Gustavo Chávez</div></div>
+    </div>
+    <div style="text-align:right;margin-top:24px;">
+      <button class="btn btn-navy" onclick="window.print()">🖨 Imprimir / PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORIAL -->
+<div id="p-historial" class="page">
+  <div class="sh">Sesiones registradas</div>
+  <div id="historial-list"></div>
+</div>
+
+</div><!-- /main -->
+
+<!-- MODAL TAREA -->
+<div class="overlay" id="m-task">
+  <div class="modal">
+    <div class="modal-h">Agregar actividad</div>
+    <div class="fg"><label class="fl">Descripción</label><textarea class="fta" id="n-desc" placeholder="Describe la actividad…"></textarea></div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Responsable(s)</label><input type="text" class="fi" id="n-resp" placeholder="ej. Carlos y Gus"></div>
+      <div class="fg"><label class="fl">Rubro</label>
+        <select class="fs" id="n-rubro">
+          <option>Operaciones</option><option>Cocina</option><option>Servicio al cliente</option>
+          <option>Limpieza</option><option>Personal</option><option>Administración</option><option>Proyectos</option>
+        </select>
+      </div>
+    </div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Estatus</label>
+        <select class="fs" id="n-status">
+          <option value="nuevo">Nuevo</option><option value="seguimiento">En seguimiento</option>
+          <option value="pendiente">Pendiente</option><option value="concluido">Concluido</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Sesión de origen</label><input type="text" class="fi" id="n-session" placeholder="ej. 9 jun 2026"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeM('m-task')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addTask()">Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SESIÓN -->
+<div class="overlay" id="m-session">
+  <div class="modal">
+    <div class="modal-h">Registrar sesión</div>
+    <div class="fr2">
+      <div class="fg"><label class="fl">Fecha</label><input type="text" class="fi" id="s-fecha" placeholder="9 jun 2026"></div>
+      <div class="fg"><label class="fl">Asistentes</label><input type="text" class="fi" id="s-asist" placeholder="Gus, Omar, Saúl, Nancy"></div>
+    </div>
+    <div class="fg"><label class="fl">Notas</label><textarea class="fta" id="s-notas" placeholder="Observaciones generales…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeM('m-session')">Cancelar</button>
+      <button class="btn btn-primary" onclick="addSession()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL APPS SCRIPT CODE -->
+<div class="overlay" id="m-script">
+  <div class="modal" style="width:640px;">
+    <div class="modal-h">📋 Código para Google Apps Script</div>
+    <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">Copia todo este código, pégalo en el editor de Apps Script del Sheet y haz clic en <strong>Implementar → Nueva implementación → Aplicación web</strong>. En "Quién tiene acceso" elige <strong>Cualquier persona</strong>.</p>
+    <textarea id="script-code" readonly style="width:100%;height:300px;font-size:11px;font-family:monospace;background:#F8FAFC;border:1px solid var(--border);border-radius:6px;padding:10px;resize:none;"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeM('m-script')">Cerrar</button>
+      <button class="btn btn-primary" onclick="copyScript()">Copiar código</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+// APPS SCRIPT CODE (se muestra al usuario para pegar)
+// ══════════════════════════════════════════════════
+const APPS_SCRIPT_CODE = `
+function doGet(e) {
+  var action = e.parameter.action;
+  var sheet = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = sheet.getSheetByName("Tareas") || sheet.insertSheet("Tareas");
+  var output = {};
+
+  if (action === "read") {
+    var data = ss.getDataRange().getValues();
+    output = { tasks: data };
+  } else if (action === "write") {
+    var tasks = JSON.parse(decodeURIComponent(e.parameter.tasks));
+    ss.clearContents();
+    if (tasks.length > 0) {
+      ss.getRange(1, 1, tasks.length, tasks[0].length).setValues(tasks);
+    }
+    output = { ok: true };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(output))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+`.trim();
+
+// ══════════════════════════════════════════════════
+// DATOS INICIALES
+// ══════════════════════════════════════════════════
+const DEFAULT_TASKS = [
+  [1,"Bitácora de cierres: firma de cierres cocina y baños (capitanes). Evidencia diaria. Revisar cierres en general.","Carlos y Líderes","Operaciones","seguimiento","9 jun 2026","",3],
+  [2,"Monitoreos de capitanes de venta: 2/semana. One-on-one individual y grupal mensual. Carlos hace los de líderes.","Carlos / Líderes","Operaciones","nuevo","9 jun 2026","",1],
+  [3,"Colgar cuadros de lo que va del mes con fotos actualizadas.","Carlos","Operaciones","nuevo","9 jun 2026","",1],
+  [4,"Recordar que no sale nada sin comanda. Seguimiento de tareas incompletas.","Todos","Operaciones","seguimiento","9 jun 2026","",2],
+  [5,"Cuidar instrumentos e insumos. Uniformes limpios — documentar en RedBook y llenar brief.","Líderes","Operaciones","nuevo","9 jun 2026","",1],
+  [6,"Junta mensual con meseros sobre ventana de servicio. Huellas en ventanales.","Líderes","Operaciones","seguimiento","9 jun 2026","En proceso",2],
+  [7,"Preparar propuesta y plan de trabajo para Día del Padre.","Carlos y Gus","Operaciones","nuevo","9 jun 2026","",1],
+  [8,"Cobro al 100% de platillos cuando se modifica una orden o en descamoche. Minuta firmada.","Carlos y Gus","Operaciones","nuevo","9 jun 2026","",1],
+  [9,"Seguimiento a filtros de agua.","Omar","Operaciones","nuevo","9 jun 2026","",1],
+  [10,"Tema alcantarilla — revisar y dar seguimiento.","Saúl","Operaciones","nuevo","9 jun 2026","",1],
+  [11,"Compra de búho / que se mueva.","Omar","Operaciones","seguimiento","9 jun 2026","",1],
+  [12,"Recetario: agregar pay de mango y guayaba, cambio del de queso. Revisar recetario de pelea y de línea.","Jesús y Saúl","Cocina","seguimiento","9 jun 2026","",2],
+  [13,"Platillos nuevos — proceso de elaboración: Nueva York c/hueso, Lechón, Borrego, Costilla cargada, Baby back, Aguachile RibEye. Salsa en molcajete.","Jesús / Saúl","Cocina","seguimiento","9 jun 2026","",1],
+  [14,"Tacos y tortillas: revisar cuáles se quedan y costear.","Jesús / Saúl","Cocina","seguimiento","9 jun 2026","",1],
+  [15,"T-bone: presentación, recosteo. Prueba New York 90 grs. Entrenamiento fajeo — Emmanuel enseña.","Carlos y Jesús","Cocina","nuevo","9 jun 2026","",1],
+  [16,"Nueva York con hueso y mantequilla — a venta, presentar en junta mensual.","Carlos y Jesús","Cocina","nuevo","9 jun 2026","",1],
+  [17,"Quejas del pollo: revisar proceso, pruebas orgánico, trabajar para que salga fajeado.","Uriel y Jesús","Cocina","seguimiento","9 jun 2026","",2],
+  [18,"Pruebas de chorizo (receta correcta vs incorrecta). Seguimiento de recetas.","Uriel / Saúl","Cocina","nuevo","9 jun 2026","",1],
+  [19,"Papas los domingos después de las 8pm — revisar y garantizar surtido.","Jesús y Saúl","Cocina","nuevo","9 jun 2026","",1],
+  [20,"Manual de limpieza profunda — enviar reporte los viernes antes de la 1pm.","Chefs y Souchefs","Cocina","seguimiento","9 jun 2026","",2],
+  [21,"Cápsula junta julio: fajeo y costillas — Emmanuel prepara material.","Emmanuel","Cocina","nuevo","9 jun 2026","",1],
+  [22,"Actualizar lista maestra de eventos.","Saúl","Cocina","seguimiento","9 jun 2026","",1],
+  [23,"Seguimiento a mesas frías de cocina.","Saúl","Cocina","nuevo","9 jun 2026","",1],
+  [24,"Servicio fantasma (Iván), fallas tortillas, servilletas, punto pivote bebidas. Firmar minuta de retro.","Carlos y Gus","Servicio al cliente","nuevo","9 jun 2026","",1],
+  [25,"Cocina más atenta al comensal: saludar en estacionamiento o al pasar.","Todos","Servicio al cliente","seguimiento","9 jun 2026","En proceso",2],
+  [26,"Reseñas en plataformas: revisar avance.","Carlos","Servicio al cliente","seguimiento","9 jun 2026","",2],
+  [27,"Cómo pedir las cosas, esperar campanas, contestar bien en chats.","Ricardo","Servicio al cliente","nuevo","9 jun 2026","",1],
+  [28,"Barra no avisa al retirarse. Retro de firmas.","Juan","Servicio al cliente","nuevo","9 jun 2026","",1],
+  [29,"Descamoche: que no se quede comida — bolsa, proceso, minuta firmada.","Uriel","Servicio al cliente","nuevo","9 jun 2026","",1],
+  [30,"Limpieza general Raza: olla carbón, báscula, desamoche. Ambas sucursales. Auditorías líderes.","Líderes","Limpieza","seguimiento","9 jun 2026","",2],
+  [31,"Limpieza al cuarto de descamoche.","Uriel y Jesús","Limpieza","seguimiento","9 jun 2026","",1],
+  [32,"Control celulares: actas Fernando (actitud, limpieza, celular, clamatos) y Gerardo. Atención hostess Frida y Paola.","Carlos y Juan","Personal","nuevo","9 jun 2026","",2],
+  [33,"Incidencia Frank y Fernando: fumando fuera sin cierres listos.","Carlos","Personal","nuevo","9 jun 2026","",1],
+  [34,"Inducciones: implementar de nuevo, validar quiénes tienen. ¿Cuántos llevamos, cuántos faltan?","Carlos","Personal","seguimiento","9 jun 2026","",2],
+  [35,"Reporte con Frank sobre quejas de compañeros.","Ricardo y Omar","Personal","seguimiento","9 jun 2026","",1],
+  [36,"Revisar empleado del mes de abril.","Nancy","Personal","nuevo","9 jun 2026","",1],
+  [37,"Contratación señora limpieza.","Carlos","Personal","seguimiento","9 jun 2026","",1],
+  [38,"Contratación de nuevo carnicero.","Carlos","Personal","seguimiento","9 jun 2026","",1],
+  [39,"Vinos: revisión cada 6 meses de ventas. Carta de vinos atractiva. Reporte de venta.","Carlos y Gus","Administración","nuevo","9 jun 2026","",1],
+  [40,"En junta semanal, cada líder presenta reporte de su puesto y avances de minutas.","Carlos y Líderes","Administración","seguimiento","9 jun 2026","",2],
+  [41,"PROYECTO: Protocolo hostess.","Líderes","Proyectos","pendiente","9 jun 2026","",2],
+  [42,"PROYECTO: Horarios.","Líderes","Proyectos","pendiente","9 jun 2026","",1],
+  [43,"PROYECTO: Limpieza profunda — calendario y actividades.","Todos Líderes","Proyectos","pendiente","9 jun 2026","",1],
+];
+
+const HEADERS = ["id","desc","resp","rubro","status","session","comments","rec"];
+
+// ══════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════
+let tasks = [];
+let sessions = [{ id:1, fecha:"9 jun 2026", asistentes:"Gus, Omar, Saúl, Nancy", notas:"Primera sesión en el sistema digitalizado." }];
+let nextId = 44, nextSessId = 2;
+let WEBAPP_URL = localStorage.getItem('carboneria_webapp_url') || '';
+const STATUS_CYCLE = ['nuevo','seguimiento','pendiente','concluido'];
+
+// ══════════════════════════════════════════════════
+// SYNC CON GOOGLE SHEETS
+// ══════════════════════════════════════════════════
+function setSyncStatus(state) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  dot.className = 'sync-dot ' + (state === 'syncing' ? 'syncing' : state === 'ok' ? '' : 'offline');
+  lbl.textContent = state === 'syncing' ? 'Sincronizando…' : state === 'ok' ? 'Sincronizado ✓' : 'Local';
+}
+
+async function loadFromSheet() {
+  if (!WEBAPP_URL) { loadLocal(); return; }
+  setSyncStatus('syncing');
+  try {
+    const r = await fetch(WEBAPP_URL + '?action=read');
+    const data = await r.json();
+    if (data.tasks && data.tasks.length > 1) {
+      tasks = data.tasks.slice(1).map(row => ({
+        id: +row[0], desc: row[1], resp: row[2], rubro: row[3],
+        status: row[4], session: row[5],
+        comments: row[6] ? row[6].split('||') : [],
+        rec: +row[7] || 1
+      }));
+      nextId = Math.max(...tasks.map(t => t.id)) + 1;
+      setSyncStatus('ok');
+    } else {
+      // Sheet vacío — cargamos defaults y los subimos
+      initDefaultTasks();
+      await saveToSheet();
+    }
+  } catch(e) { loadLocal(); setSyncStatus('offline'); }
+}
+
+async function saveToSheet() {
+  if (!WEBAPP_URL) { saveLocal(); return; }
+  setSyncStatus('syncing');
+  try {
+    const rows = [HEADERS, ...tasks.map(t => [
+      t.id, t.desc, t.resp, t.rubro, t.status, t.session,
+      t.comments.join('||'), t.rec
+    ])];
+    const encoded = encodeURIComponent(JSON.stringify(rows));
+    await fetch(WEBAPP_URL + '?action=write&tasks=' + encoded);
+    setSyncStatus('ok');
+  } catch(e) { saveLocal(); setSyncStatus('offline'); }
+}
+
+function loadLocal() {
+  const saved = localStorage.getItem('carboneria_tasks');
+  if (saved) {
+    tasks = JSON.parse(saved);
+    nextId = Math.max(...tasks.map(t=>t.id))+1;
+  } else { initDefaultTasks(); }
+}
+
+function saveLocal() {
+  localStorage.setItem('carboneria_tasks', JSON.stringify(tasks));
+}
+
+function initDefaultTasks() {
+  tasks = DEFAULT_TASKS.map(row => ({
+    id:row[0], desc:row[1], resp:row[2], rubro:row[3],
+    status:row[4], session:row[5],
+    comments: row[6] ? [row[6]] : [],
+    rec:row[7]
+  }));
+}
+
+function saveWebAppUrl() {
+  const url = document.getElementById('webapp-url').value.trim();
+  if (!url.includes('script.google.com')) { toast('⚠️ URL inválida — debe ser de script.google.com'); return; }
+  WEBAPP_URL = url;
+  localStorage.setItem('carboneria_webapp_url', url);
+  document.getElementById('setup-banner').classList.add('hidden');
+  toast('✅ Conectado — sincronizando…');
+  loadFromSheet().then(() => { renderDashboard(); renderTasks(); });
+}
+
+function skipSetup() {
+  document.getElementById('setup-banner').classList.add('hidden');
+}
+
+// ══════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════
+function showPage(name, tab) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('p-'+name).classList.add('active');
+  tab.classList.add('active');
+  if(name==='dashboard') renderDashboard();
+  if(name==='tasks') renderTasks();
+  if(name==='minuta') renderMinutaTable();
+  if(name==='historial') renderHistorial();
+}
+
+function openM(id) { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+
+function toast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+function badgeHtml(status, id) {
+  const L={nuevo:'🔴 Nuevo',seguimiento:'🟡 Seguimiento',pendiente:'🟠 Pendiente',concluido:'🟢 Concluido'};
+  return `<button class="badge ${status}" onclick="cycleStatus(${id??''})">${L[status]||status}</button>`;
+}
+
+function cycleStatus(id) {
+  const t=tasks.find(x=>x.id===id); if(!t) return;
+  t.status=STATUS_CYCLE[(STATUS_CYCLE.indexOf(t.status)+1)%4];
+  saveToSheet(); renderTasks(); renderDashboard();
+  toast('Estatus actualizado → '+t.status);
+}
+
+// ══════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════
+function renderDashboard() {
+  const n=tasks.length, nv=tasks.filter(t=>t.status==='nuevo').length,
+        sg=tasks.filter(t=>t.status==='seguimiento').length,
+        pd=tasks.filter(t=>t.status==='pendiente').length,
+        dn=tasks.filter(t=>t.status==='concluido').length;
+
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat s-total"><div class="stat-n">${n}</div><div class="stat-label">Total</div></div>
+    <div class="stat s-nuevo"><div class="stat-n">${nv}</div><div class="stat-label">Nuevas</div></div>
+    <div class="stat s-seg"><div class="stat-n">${sg}</div><div class="stat-label">En seguimiento</div></div>
+    <div class="stat s-pend"><div class="stat-n">${pd}</div><div class="stat-label">Pendiente</div></div>
+    <div class="stat s-done"><div class="stat-n">${dn}</div><div class="stat-label">Concluidas</div></div>`;
+
+  const rm={};
+  tasks.forEach(t=>t.resp.split(/[,\/y&]/i).map(r=>r.trim()).filter(Boolean).forEach(r=>{
+    if(!rm[r]) rm[r]={nuevo:0,seguimiento:0,pendiente:0,concluido:0};
+    rm[r][t.status]++;
+  }));
+
+  document.getElementById('resp-grid').innerHTML=Object.entries(rm)
+    .sort((a,b)=>Object.values(b[1]).reduce((s,x)=>s+x,0)-Object.values(a[1]).reduce((s,x)=>s+x,0))
+    .map(([name,c])=>{
+      const tot=Object.values(c).reduce((s,x)=>s+x,0)||1;
+      return `<div class="resp-card" onclick="goFilterResp('${name}')">
+        <div class="resp-name">${name}</div>
+        <div class="mini-bar">
+          <div class="mb-seg" style="width:${c.seguimiento/tot*100}%"></div>
+          <div class="mb-new" style="width:${c.nuevo/tot*100}%"></div>
+          <div class="mb-pend" style="width:${c.pendiente/tot*100}%"></div>
+          <div class="mb-done" style="width:${c.concluido/tot*100}%"></div>
+        </div>
+        <div class="resp-counts">
+          ${c.nuevo?`<span class="rc"><span class="rc-dot" style="background:var(--crimson)"></span>${c.nuevo} nuevo</span>`:''}
+          ${c.seguimiento?`<span class="rc"><span class="rc-dot" style="background:var(--navy)"></span>${c.seguimiento} seg.</span>`:''}
+          ${c.pendiente?`<span class="rc"><span class="rc-dot" style="background:var(--amber)"></span>${c.pendiente} pend.</span>`:''}
+          ${c.concluido?`<span class="rc"><span class="rc-dot" style="background:var(--teal)"></span>${c.concluido} listo</span>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+  const rec=tasks.filter(t=>t.rec>=2);
+  document.getElementById('recur-tbody').innerHTML=rec.length?rec.map(t=>`
+    <tr>
+      <td style="max-width:360px;">${t.desc.substring(0,90)}${t.desc.length>90?'…':''}</td>
+      <td><span class="chip">${t.resp}</span></td>
+      <td><span class="rubro-pill">${t.rubro}</span></td>
+      <td><span style="color:var(--crimson);font-weight:700;">${t.rec}×</span><span class="recur-flag">recurrente</span></td>
+      <td>${badgeHtml(t.status,t.id)}</td>
+    </tr>`).join(''):`<tr><td colspan="5"><div class="empty">Sin recurrencias detectadas.</div></td></tr>`;
+}
+
+function goFilterResp(name) {
+  showPage('tasks',document.querySelectorAll('.nav-tab')[1]);
+  setTimeout(()=>{ document.getElementById('f-resp').value=name; renderTasks(); },30);
+}
+
+// ══════════════════════════════════════════════════
+// TASKS
+// ══════════════════════════════════════════════════
+function fillSelects() {
+  const rs=new Set(), rbs=new Set();
+  tasks.forEach(t=>{
+    t.resp.split(/[,\/y&]/i).map(r=>r.trim()).filter(Boolean).forEach(r=>rs.add(r));
+    rbs.add(t.rubro);
+  });
+  const rf=document.getElementById('f-resp'), rbf=document.getElementById('f-rubro');
+  const curR=rf.value, curRb=rbf.value;
+  rf.innerHTML='<option value="">Todos los responsables</option>';
+  [...rs].sort().forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;if(r===curR)o.selected=true;rf.appendChild(o);});
+  rbf.innerHTML='<option value="">Todos los rubros</option>';
+  [...rbs].sort().forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;if(r===curRb)o.selected=true;rbf.appendChild(o);});
+}
+
+function renderTasks() {
+  fillSelects();
+  const q=(document.getElementById('fsearch').value||'').toLowerCase();
+  const fr=document.getElementById('f-resp').value;
+  const fs=document.getElementById('f-status').value;
+  const frb=document.getElementById('f-rubro').value;
+  let list=tasks.filter(t=>{
+    if(q&&!t.desc.toLowerCase().includes(q)&&!t.resp.toLowerCase().includes(q)) return false;
+    if(fr&&!t.resp.toLowerCase().includes(fr.toLowerCase())) return false;
+    if(fs&&t.status!==fs) return false;
+    if(frb&&t.rubro!==frb) return false;
+    return true;
+  });
+  const tbody=document.getElementById('tasks-tbody');
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty">Sin resultados.</div></td></tr>`;return;}
+  tbody.innerHTML=list.map(t=>{
+    const lc=t.comments.length?t.comments[t.comments.length-1]:'';
+    return `<tr>
+      <td style="color:var(--text-muted);font-size:11px;">${t.id}</td>
+      <td>
+        <div style="line-height:1.45;">${t.desc}${t.rec>=2?`<span class="recur-flag">⚠ ×${t.rec}</span>`:''}</div>
+        <div class="comment-row" id="cr-${t.id}">
+          <textarea class="comment-input" id="ci-${t.id}" placeholder="Escribe un avance…"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="saveComment(${t.id})">✓</button>
+        </div>
+        ${lc?`<div class="last-comment">💬 ${lc}</div>`:''}
+      </td>
+      <td><span class="rubro-pill">${t.rubro}</span></td>
+      <td><span class="chip">${t.resp}</span></td>
+      <td>${badgeHtml(t.status,t.id)}</td>
+      <td><button class="btn btn-outline btn-sm" onclick="toggleCR(${t.id})">${t.comments.length?`💬 ${t.comments.length}`:'+ Avance'}</button></td>
+      <td style="color:var(--text-muted);font-size:11px;">${t.session}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleCR(id){const el=document.getElementById('cr-'+id);el.classList.toggle('open');if(el.classList.contains('open'))document.getElementById('ci-'+id).focus();}
+
+function saveComment(id){
+  const t=tasks.find(x=>x.id===id);if(!t)return;
+  const val=document.getElementById('ci-'+id).value.trim();if(!val)return;
+  const d=new Date().toLocaleDateString('es-MX',{day:'numeric',month:'short'});
+  t.comments.push(`[${d}] ${val}`);
+  document.getElementById('cr-'+id).classList.remove('open');
+  saveToSheet(); renderTasks();
+  toast('Avance guardado ✓');
+}
+
+function addTask(){
+  const desc=document.getElementById('n-desc').value.trim();
+  if(!desc){toast('Escribe una descripción');return;}
+  tasks.push({id:nextId++,desc,resp:document.getElementById('n-resp').value||'Sin asignar',rubro:document.getElementById('n-rubro').value,status:document.getElementById('n-status').value,session:document.getElementById('n-session').value||'9 jun 2026',comments:[],rec:1});
+  closeM('m-task');
+  ['n-desc','n-resp','n-session'].forEach(id=>document.getElementById(id).value='');
+  saveToSheet(); renderTasks(); renderDashboard();
+  toast('✅ Actividad agregada');
+}
+
+// ══════════════════════════════════════════════════
+// MINUTA
+// ══════════════════════════════════════════════════
+function renderMinutaTable(){
+  document.getElementById('min-tbody').innerHTML=tasks.filter(t=>t.status!=='concluido').map(t=>`
+    <tr><td><input type="checkbox" class="mchk" value="${t.id}" checked></td>
+    <td style="font-size:12.5px;">${t.desc.substring(0,85)}${t.desc.length>85?'…':''}</td>
+    <td><span class="chip">${t.resp}</span></td><td><span class="rubro-pill">${t.rubro}</span></td>
+    <td>${badgeHtml(t.status)}</td></tr>`).join('');
+}
+
+function toggleAll(cb){document.querySelectorAll('.mchk').forEach(c=>c.checked=cb.checked);}
+
+function genMinuta(){
+  const fecha=document.getElementById('min-fecha').value||new Date().toLocaleDateString('es-MX',{day:'numeric',month:'long',year:'numeric'});
+  const hora=document.getElementById('min-hora').value||'12:00pm';
+  const asist=document.getElementById('min-asist').value||'Gus, Omar, Saúl, Nancy';
+  document.getElementById('m-fecha-out').textContent=fecha;
+  document.getElementById('m-hora-out').textContent=hora;
+  document.getElementById('m-asist-out').textContent=asist;
+  const ids=[...document.querySelectorAll('.mchk:checked')].map(c=>+c.value);
+  const sel=tasks.filter(t=>ids.includes(t.id));
+  const rows=(list)=>list.map(t=>`<tr class="min-row"><td style="width:70%;">${t.desc}</td><td style="color:var(--text-muted);white-space:nowrap;">${t.resp}</td></tr>`).join('');
+  const sect=(lbl,list,cls)=>list.length?`<tr><td colspan="2" class="min-section-head ${cls}">${lbl}</td></tr>${rows(list)}`:'';
+  document.getElementById('minuta-table').innerHTML=sect('🟡 En seguimiento',sel.filter(t=>t.status==='seguimiento'),'')+sect('🔴 Actividades nuevas',sel.filter(t=>t.status==='nuevo'),'crimson')+sect('🟠 Pendiente',sel.filter(t=>t.status==='pendiente'),'amber');
+  const prev=document.getElementById('minuta-preview');
+  prev.style.display='block';prev.scrollIntoView({behavior:'smooth'});
+  toast('✅ Minuta generada');
+}
+
+// ══════════════════════════════════════════════════
+// HISTORIAL
+// ══════════════════════════════════════════════════
+function addSession(){
+  const fecha=document.getElementById('s-fecha').value.trim();if(!fecha){toast('Escribe la fecha');return;}
+  sessions.push({id:nextSessId++,fecha,asistentes:document.getElementById('s-asist').value,notas:document.getElementById('s-notas').value});
+  closeM('m-session');renderHistorial();toast('✅ Sesión registrada');
+}
+
+function renderHistorial(){
+  document.getElementById('historial-list').innerHTML=sessions.slice().reverse().map(s=>{
+    const n=tasks.filter(t=>t.session===s.fecha).length;
+    return `<div class="session-card">
+      <div><div class="sess-date">📅 ${s.fecha}</div>
+      <div class="sess-meta">${s.asistentes} · ${n} actividad${n!==1?'es':''}</div>
+      ${s.notas?`<div style="font-size:11.5px;color:var(--text-muted);margin-top:3px;">${s.notas}</div>`:''}</div>
+      <button class="btn btn-outline btn-sm" onclick="goSession('${s.fecha}')">Ver actividades →</button>
+    </div>`;
+  }).join('');
+}
+
+function goSession(fecha){
+  showPage('tasks',document.querySelectorAll('.nav-tab')[1]);
+  setTimeout(()=>{
+    fillSelects();
+    const tbody=document.getElementById('tasks-tbody');
+    const list=tasks.filter(t=>t.session===fecha);
+    tbody.innerHTML=list.map(t=>{
+      const lc=t.comments.length?t.comments[t.comments.length-1]:'';
+      return `<tr>
+        <td style="color:var(--text-muted);font-size:11px;">${t.id}</td>
+        <td><div style="line-height:1.45;">${t.desc}${t.rec>=2?`<span class="recur-flag">⚠ ×${t.rec}</span>`:''}</div>${lc?`<div class="last-comment">💬 ${lc}</div>`:''}</td>
+        <td><span class="rubro-pill">${t.rubro}</span></td><td><span class="chip">${t.resp}</span></td>
+        <td>${badgeHtml(t.status,t.id)}</td>
+        <td><button class="btn btn-outline btn-sm" onclick="toggleCR(${t.id})">${t.comments.length?`💬 ${t.comments.length}`:'+ Avance'}</button></td>
+        <td style="color:var(--text-muted);font-size:11px;">${t.session}</td>
+      </tr>`;
+    }).join('');
+  },30);
+}
+
+// ══════════════════════════════════════════════════
+// APPS SCRIPT MODAL
+// ══════════════════════════════════════════════════
+function showScriptModal(){
+  document.getElementById('script-code').value=APPS_SCRIPT_CODE;
+  openM('m-script');
+}
+
+function copyScript(){
+  navigator.clipboard.writeText(APPS_SCRIPT_CODE).then(()=>toast('✅ Código copiado'));
+}
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+if(localStorage.getItem('carboneria_webapp_url')){
+  document.getElementById('setup-banner').classList.add('hidden');
+}
+loadFromSheet().then(()=>{ renderDashboard(); });
+</script>
+
+<!-- INSTRUCCIONES FIJAS AL PIE -->
+<div id="instrucciones" style="background:var(--navy-soft);border-top:1px solid var(--border);padding:16px 28px;font-size:12px;color:var(--navy);">
+  <strong>¿Cómo conectar para ver en tiempo real?</strong>
+  &nbsp;·&nbsp; <a href="https://docs.google.com/spreadsheets/d/1dM6soG-vQaLvkCQoZch2kaS4V7S7gQueZ5SEeC5yoZU/edit" target="_blank" style="color:var(--crimson);font-weight:600;">1. Abre el Google Sheet →</a>
+  &nbsp;·&nbsp; <button onclick="showScriptModal()" style="background:none;border:none;color:var(--crimson);font-weight:600;cursor:pointer;font-size:12px;font-family:inherit;text-decoration:underline;">2. Ver código Apps Script →</button>
+  &nbsp;·&nbsp; 3. Pega la URL del Web App en el banner de arriba (aparece al recargar si no está configurado).
+  &nbsp;·&nbsp; <strong>Una vez configurado, cualquiera con el link del archivo HTML ve los mismos datos.</strong>
+</div>
+
+</body>
+</html>
